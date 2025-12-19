@@ -1,6 +1,6 @@
 import pygame
 import sys
-"import main"
+import Main
 
 pygame.init()
 
@@ -52,7 +52,7 @@ def options():
 
         SCREEN.fill("white")
 
-        OPTIONS_TEXT = get_font(45).render("Pravidlá", True, "Green")
+        OPTIONS_TEXT = get_font(45).render("Team", True, "Green")
         OPTIONS_TEXT2 = get_font(30).render("1. 👅.", True, "Black")
         OPTIONS_TEXT3 = get_font(30).render("2. idk", True, "Black")
         OPTIONS_TEXT4 = get_font(30).render("3. ;)", True, "Black")
@@ -110,7 +110,7 @@ def main_menu():
 
         OPTIONS_BUTTON = Button(image=options_rect,
                                 pos=(SCREEN_WIDTH // 2, start_y + (button_height + button_spacing) * 2),
-                                text_input="PRAVIDLÁ", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
+                                text_input="TEAM", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
         QUIT_BUTTON = Button(image=quit_rect, pos=(SCREEN_WIDTH // 2, start_y + (button_height + button_spacing) * 3),
                              text_input="QUIT", font=get_font(45), base_color="#d7fcd4", hovering_color="White")
 
