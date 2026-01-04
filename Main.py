@@ -1,5 +1,4 @@
 import pygame
-from random import randint
 
 pygame.init()
 
@@ -11,7 +10,6 @@ WHITE, GREEN, RED, ORANGE, LIGHT_BLUE, BLACK, GRAY = (255, 255, 255), (0, 255, 0
 
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("arial", 30)
-
 
 
 class Unit(pygame.sprite.Sprite):
@@ -33,28 +31,61 @@ class Unit(pygame.sprite.Sprite):
         target.health -= self.damage
 
 
-
-
 units = {
     "J.Knut": {
         "health": 250,
         "attack": 50,
-        "ability": "millionaire",
+        "ability": "the rich",
         "ability_cooldown": 2,
-
+        "image": pygame.image.load("assets/knut.png"),
     },
     "Michal": {
         "health": 150,
         "attack": 69,
-        "ability": "giant slayer",
+        "ability": "halfling",
         "ability_cooldown": 1,
-
+        "image": pygame.image.load("assets/knut.png"),
     },
     "Rome": {
         "health": 250,
         "attack": 69,
         "ability": "steal",
         "ability_cooldown": 2,
-
-    }
+        "image": pygame.image.load("assets/knut.png"),
+    },
+    "Squirtle": {
+        "health": 44,
+        "attack": 48,
+        "ability": "squirt",
+        "ability_cooldown": 2,
+        "image": pygame.image.load("assets/knut.png"),
+    },
+    "Pikachu": {
+        "health": 35,
+        "attack": 55,
+        "ability": "shock",
+        "ability_cooldown": 2,
+        "image": pygame.image.load("assets/knut.png"),
+    },
+    "Eevee": {
+        "health": 55,
+        "attack": 55,
+        "ability": "Adapt",
+        "ability_cooldown": 2,
+        "image": pygame.image.load("assets/knut.png"),
+    },
+    "Bulbasaur": {
+        "health": 45,
+        "attack": 49,
+        "ability": "Poison",
+        "ability_cooldown": 2,
+        "image": pygame.image.load("assets/knut.png"),
+    },
+    "Charmander": {
+        "health": 39,
+        "attack": 52,
+        "ability": "Burn",
+        "ability_cooldown": 2,
+        "image": pygame.image.load("assets/knut.png"),
+    },
 }
