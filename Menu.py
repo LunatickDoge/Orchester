@@ -1,5 +1,6 @@
 import pygame
 import sys
+import Battle
 
 pygame.init()
 
@@ -228,8 +229,15 @@ def main_menu():
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if NEW_GAME.checkForInput(mouse_pos):
+                    pygame.display.quit()
+                    Battle.main()
+                    pygame.quit()
+                    sys.exit()
+
                 if TEAM.checkForInput(mouse_pos):
                     options()
+
                 if QUIT.checkForInput(mouse_pos):
                     pygame.quit()
                     sys.exit()
