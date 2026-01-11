@@ -99,7 +99,7 @@ def redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerIm
     pygame.display.update()
 
 
-def displayMessage(message, pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
+def displayMessage(message, pPokemon=None, playerBar=None, computerImgList=None, cPokemon=None, computerBar=None, playerImgList=None):
     drawText(message, font, DISPLAYSURF, 10, 400, BLACK)
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     time.sleep(1)
@@ -337,17 +337,19 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
         # If player stat is faster, player attack sequence executes before computer
         # attack sequence. Else, computer attack sequence attacks first.
         if pPokemon[2] < cPokemon[2]:
-            # Execute attack sequence for player
-            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList, computerImgList)
-            # Update the health bar if any changes have occured
+            # Player goes first
+            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList,
+                            computerImgList)
             computerBar.updateBar(cPokemon)
             computerBar.drawRects()
             pygame.display.update()
             if cPokemon[1] <= 0:
                 fainted = True
                 winner = "Player"
-                break  # break loop to end program
-            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats)
+                break
+            # Pass the missing arguments here
+            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerImgList, computerBar,
+                            playerImgList)
             playerBar.updateBar(pPokemon)
             playerBar.drawRects()
             pygame.display.update()
@@ -356,7 +358,8 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
                 winner = "Computer"
                 break
         else:
-            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats)
+            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerImgList, computerBar,
+                            playerImgList)
             playerBar.updateBar(pPokemon)
             playerBar.drawRects()
             pygame.display.update()
@@ -364,7 +367,8 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
                 fainted = True
                 winner = "Computer"
                 break
-            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats)
+            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList,
+                            computerImgList)
             computerBar.updateBar(cPokemon)
             computerBar.drawRects()
             pygame.display.update()
@@ -404,12 +408,12 @@ def pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats,
         cStats = StatMod(pMove, cStats, cPokemon[0])
 
 
-def cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats):
-    # Function handling the application of steps in computer attack. Only difference
-    # from player attack sequence is that the parameters for target are aimed at the
-    # player
+def cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerImgList, computerBar, playerImgList):
+    displayMessage(
+        cPokemon[0] + " used " + cMove[5] + ".",
+        pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList
+    )
     DISPLAYSURF.blit(background, (0, 0))
-    displayMessage(cPokemon[0] + " used " + cMove[5] + ".")
     time.sleep(1)
     mode = cMove[0]
     if mode == "1":
