@@ -15,15 +15,12 @@ while True:
     data, addr = s.recvfrom(1024)
     msg = data.decode()
 
-    if msg.startswith("JOIN"):
+    if msg == "JOIN":
         if addr not in clients:
             clients.append(addr)
             print("Player joined:", addr)
 
-        for c in clients:
-            s.sendto(f"PLAYERS:{len(clients)}".encode(), c)
-
         if len(clients) == 2:
             print("Two players joined. Starting battle!")
-            for c in clients:
-                s.sendto("START".encode(), c)
+            s.sendto(b"START:0", clients[0])
+            s.sendto(b"START:1", clients[1])
