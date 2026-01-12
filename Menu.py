@@ -1,8 +1,9 @@
 import pygame
 import sys
-import subprocess
+import Battle
 
 pygame.init()
+
 SCREEN = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 SCREEN_WIDTH, SCREEN_HEIGHT = SCREEN.get_size()
 pygame.display.set_caption("Menu")
@@ -13,7 +14,6 @@ BG = pygame.transform.scale(BG, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 def get_font(size):
     return pygame.font.Font("assets/font.ttf", size)
-
 
 class Button:
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
@@ -42,7 +42,6 @@ class Button:
     def changeColor(self, position):
         color = self.hovering_color if self.rect.collidepoint(position) else self.base_color
         self.text = self.font.render(self.text_input, True, color)
-
 
 class Card:
     def __init__(self, name, stats, rect):
@@ -76,7 +75,6 @@ class Card:
 
     def clicked(self, mouse_pos):
         return self.rect.collidepoint(mouse_pos)
-
 
 class TeamSlot:
     def __init__(self, rect):
@@ -142,28 +140,31 @@ cards = [
 team_cards = []
 MAX_TEAM_SIZE = 4
 
-
 #team menu
+
+
 def options():
     while True:
-        SCREEN.fill("white")
+        SCREEN.blit(BG, (0, 0))
         mouse_pos = pygame.mouse.get_pos()
 
-        title = get_font(55).render("Build Your Team", True, "black")
-        SCREEN.blit(title, title.get_rect(center=(SCREEN_WIDTH // 2, 40)))
+        title = get_font(55).render("Build Your Team", True, "orange")
+        SCREEN.blit(title, title.get_rect(center=(SCREEN_WIDTH // 2, 60)))
 
+        # draw slots
         for slot in deck_slots:
             slot.draw(SCREEN)
 
+        # draw cards
         for card in cards:
             card.update(mouse_pos)
             card.draw(SCREEN)
 
         BACK_BUTTON = Button(
             image=None,
-            pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 80),
+            pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 40),
             text_input="BACK",
-            font=get_font(60),
+            font=get_font(45),
             base_color="black",
             hovering_color="orange"
         )
@@ -175,6 +176,10 @@ def options():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if BACK_BUTTON.checkForInput(mouse_pos):
@@ -195,12 +200,10 @@ def options():
                 for slot in deck_slots:
                     if slot.clicked(mouse_pos) and slot.card:
                         slot.card.selected = False
-                        if slot.card in team_cards:
-                            team_cards.remove(slot.card)
+                        team_cards.remove(slot.card)
                         slot.card = None
 
         pygame.display.update()
-
 
 def main_menu():
     while True:
@@ -208,15 +211,15 @@ def main_menu():
         mouse_pos = pygame.mouse.get_pos()
 
         title = get_font(100).render("Pokemon ;)", True, "#b68f40")
-        SCREEN.blit(title, title.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 6)))
+        SCREEN.blit(title, title.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 6 + 100)))
 
-        NEW_GAME = Button(None, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 40),
+        NEW_GAME = Button(None, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40),
                           "NEW GAME", get_font(50), "black", "orange")
 
-        TEAM = Button(None, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40),
+        TEAM = Button(None, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 120),
                       "TEAM", get_font(50), "black", "orange")
 
-        QUIT = Button(None, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 120),
+        QUIT = Button(None, (SCREEN_WIDTH // 2 + 10, SCREEN_HEIGHT // 2 + 200),
                       "QUIT", get_font(50), "black", "orange")
 
         for btn in [NEW_GAME, TEAM, QUIT]:
@@ -230,14 +233,18 @@ def main_menu():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if NEW_GAME.checkForInput(mouse_pos):
-                    subprocess.run(["python", "Battle.py"])
+                    pygame.display.quit()
+                    Battle.main()
+                    pygame.quit()
+                    sys.exit()
+
                 if TEAM.checkForInput(mouse_pos):
                     options()
+
                 if QUIT.checkForInput(mouse_pos):
                     pygame.quit()
                     sys.exit()
 
         pygame.display.update()
-
 
 main_menu()
