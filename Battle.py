@@ -1,9 +1,8 @@
+import pygame
 import os
-import random
 import sys
 import time
-from Menu import team_cards
-import pygame
+import random
 from pygame.locals import *
 
 # COLORS
@@ -17,49 +16,38 @@ NAVYBLUE = (0, 0, 128)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 ALPHA = (255, 0, 255)
-
-
-class Pokemon:
-    def __init__(self, name: str, hp: int, speed: int, ptype: str, max_hp: int, moves: list):
-        self.name = name
-        self.hp = hp
-        self.max_hp = max_hp
-        self.speed = speed
-        self.type = ptype
-        self.moves = moves
-
-    def take_damage(self, amount: float):
-        self.hp = max(0, int(self.hp - amount))
-
-    def is_fainted(self) -> bool:
-        return self.hp <= 0
+FPS = 15
+fpsClock = pygame.time.Clock()
 
 
 def MoveStrip(pokemonList, moveNumber):
-    # Function for stripping data from a move file and into a list.
+    # Build move filename
     moveName = pokemonList[moveNumber + 3].lower() + '.txt'
     movePath = os.path.join("data", moveName)
-    with open(movePath, 'r') as f:
-        fileString = f.read()
-        fileList = fileString.split('\n')
 
-    return fileList[:6]
+    with open(movePath, 'r') as f:
+        fileList = f.read().split('\n')
+
+    moveList = []
+    for i in range(6):
+        moveList.append(fileList[i])
+
+    return moveList
 
 
 def PokemonStrip(targetFile):
-    targetPath = os.path.join("data", targetFile)
+    # Build path to data folder
+    file_path = os.path.join("data", targetFile)
 
-    with open(targetPath, 'r') as f:
-        data = f.read().split('\n')
+    with open(file_path, 'r') as f:
+        fileString = f.read()
+        fileList = fileString.split('\n')
 
-    return {
-        "name": data[0],
-        "hp": int(data[1]),
-        "speed": int(data[2]),
-        "type": data[3],
-        "max_hp": int(data[8]),
-        "moves": data[4:8]
-    }
+    targetList = []
+    for i in range(11):
+        targetList.append(fileList[i])
+
+    return targetList
 
 
 def ClearTerminal():
@@ -101,17 +89,17 @@ def drawMoveText(text, font, surface, x, y, color):
 
 def redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
     DISPLAYSURF.blit(playerImgList[1], (0, 195))
-    drawText(pPokemon.name, font, DISPLAYSURF, 200, 315, BLACK)
+    drawText(pPokemon[0], font, DISPLAYSURF, 200, 315, BLACK)
     playerBar.updateBar(pPokemon)
     playerBar.drawRects()
     DISPLAYSURF.blit(computerImgList[0], (200, 0))
-    drawText(pPokemon.name, font, DISPLAYSURF, 10, 45, BLACK)
+    drawText(cPokemon[0], font, DISPLAYSURF, 10, 45, BLACK)
     computerBar.updateBar(cPokemon)
     computerBar.drawRects()
     pygame.display.update()
 
 
-def displayMessage(message):
+def displayMessage(message, pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
     drawText(message, font, DISPLAYSURF, 10, 400, BLACK)
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     time.sleep(1)
@@ -123,29 +111,30 @@ def cMoveSelect(cMoveList):
     return cMove
 
 
-def pMoveSelect(pMoveList, pPokemon, button1, button2, button3, button4):
+def pMoveSelect(pMoveList, pPokemon, playerBar, computerBar, playerImgList, computerImgList,
+                button1, button2, button3, button4, cPokemon):
     # The player move select function. This function draws the instructions and the
     # buttons necessary to guide the player in selecting a move for their pokemon.
 
     # Redrawing background image to clear text
+    global Move
     DISPLAYSURF.blit(background, (0, 0))
     # Drawing the prompt in the text section
-    drawText("What will " + pPokemon.name + " do?", font, DISPLAYSURF, 10, 400, BLACK)
+    drawText("What will " + pPokemon[0] + " do?", font, DISPLAYSURF, 10, 400, BLACK)
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
     # Drawing buttons for use in the move selection process. Buttons are separate
     # from the text on the button to allow the system to be completely modular
-    button1.drawButton(button)
+    button1.drawButton()
     drawMoveText(pMoveList[0][5], font, DISPLAYSURF, 100, 499, BLACK)
-    button2.drawButton(button)
+    button2.drawButton()
     drawMoveText(pMoveList[1][5], font, DISPLAYSURF, 300, 499, BLACK)
-    button3.drawButton(button)
+    button3.drawButton()
     drawMoveText(pMoveList[2][5], font, DISPLAYSURF, 100, 566, BLACK)
-    button4.drawButton(button)
+    button4.drawButton()
     drawMoveText(pMoveList[3][5], font, DISPLAYSURF, 300, 566, BLACK)
     pygame.display.update()
 
-    Move = None
     picked = 0
     while picked == 0:
         for event in pygame.event.get():
@@ -172,8 +161,9 @@ def pMoveSelect(pMoveList, pPokemon, button1, button2, button3, button4):
 ################################################################################
 # Image Initialization Functions
 ################################################################################
+
 def BulbImages():
-    fileNames = ["bulbasaurFront.png", "bulbasaurBack.png"]
+    fileNames = ["assets/bulbasaurFront.png", "assets/bulbasaurBack.png"]
     bulbArray = []
     for x in fileNames:
         newImg = pygame.image.load(x)
@@ -182,7 +172,7 @@ def BulbImages():
 
 
 def CharImages():
-    fileNames = ["charmanderFront.png", "charmanderBack.png"]
+    fileNames = ["assets/charmanderFront.png", "assets/charmanderBack.png"]
     charArray = []
     for x in fileNames:
         newImg = pygame.image.load(x)
@@ -191,7 +181,7 @@ def CharImages():
 
 
 def SquirtImages():
-    fileNames = ["squirtleFront.png", "squirtleBack.png"]
+    fileNames = ["assets/squirtleFront.png", "assets/squirtleBack.png"]
     squirtArray = []
     for x in fileNames:
         newImg = pygame.image.load(x)
@@ -199,7 +189,7 @@ def SquirtImages():
     return squirtArray
 
 
-class HealthBar:
+class HealthBar():
     # Class for creating unique healthbar objects for the player and computer pokemon.
     def __init__(self):
         self.position = None
@@ -213,6 +203,13 @@ class HealthBar:
         self.negDimensions = (150, 5)
         self.posDimensions = [150, 5]
 
+    def updateBar(self, pokemonList):
+        maxHealth = pokemonList[8]
+        currentHealth = pokemonList[1]
+        healthProportion = int(currentHealth) / float(maxHealth)
+        newDimension = healthProportion * self.negDimensions[0]
+        self.posDimensions[0] = newDimension
+
     def drawRects(self):
         # Function for drawing the actual rectangles that make up the health bar.
         # (x,y,width,height)
@@ -220,72 +217,66 @@ class HealthBar:
         pygame.draw.rect(DISPLAYSURF, GREEN, (self.position, self.posDimensions))
         pygame.display.update()
 
-    def updateBar(self, pokemon):
-        healthProportion = pokemon.hp / pokemon.max_hp
-        self.posDimensions[0] = healthProportion * self.negDimensions[0]
 
 
-class Button:
+
+class Button():
     def __init__(self):
         self.rect = None
+        self.image = None  # store assigned image
 
     def assignImage(self, picture):
         self.rect = picture.get_rect()
+        self.image = picture
 
     def setCoords(self, x, y):
         self.rect.topleft = x, y
 
-    def drawButton(self, picture):
+    def drawButton(self, picture=None):
+        # if no picture is passed, use the assigned image
+        if picture is None:
+            picture = self.image
         DISPLAYSURF.blit(picture, self.rect)
 
     def pressed(self, mouse):
-        if self.rect.collidepoint(mouse):
-            return True
+        return self.rect.collidepoint(mouse)
 
 
 def PlayerChoice(targetFile):
-    data = PokemonStrip(targetFile)
-
-    moves = []
-    for move_name in data["moves"]:
-        moves.append(MoveStrip([None, None, None, None, move_name], 0))
-
-    return Pokemon(
-        name=data["name"],
-        hp=data["hp"],
-        speed=data["speed"],
-        ptype=data["type"],
-        max_hp=data["max_hp"],
-        moves=moves
-    )
+    # Function handling the stripping and value assignment for the player pokemon
+    pPokemon = []
+    pPokemon = PokemonStrip(targetFile)  # Strip values from player target file
+    moveNumber = 1
+    pAttackList = []
+    # Create a separate list for every player move
+    while moveNumber < 5:
+        pAttackList.append(MoveStrip(pPokemon, moveNumber))
+        moveNumber += 1
+    return [pPokemon, pAttackList]
 
 
-def ComputerChoice(choices, bulbImages, squirtImages, charImages):
-    choice = random.choice(choices)
-
-    if choice == "Charmander":
+def ComputerChoice(choices, charImages, bulbImages, squirtImages):
+    # Function for handling the random selection of pokemon for the computer.=
+    global computerImgList
+    choice = random.randint(0, 1)  # Pick at random one of the two remaining pokemon
+    # Determine which pokemon has been selected and assign images to the computer
+    if choices[choice] == "Charmander":
         computerImgList = charImages
-    elif choice == "Bulbasaur":
+    elif choices[choice] == "Bulbasaur":
         computerImgList = bulbImages
-    else:
+    elif choices[choice] == "Squirtle":
         computerImgList = squirtImages
-
-    data = PokemonStrip(choice.lower() + ".txt")
-
-    moves = []
-    for move_name in data["moves"]:
-        moves.append(MoveStrip([None, None, None, None, move_name], 0))
-
-    cPokemon = Pokemon(
-        name=data["name"],
-        hp=data["hp"],
-        speed=data["speed"],
-        ptype=data["type"],
-        max_hp=data["max_hp"],
-        moves=moves
-    )
-
-    return cPokemon, computerImgList
+    targetFile = choices[choice].lower() + '.txt'  # Generate filename for the strip
+    # function to use as a target.
+    cPokemon = []  # Create stat list for computer pokemon
+    cPokemon = PokemonStrip(targetFile)  # Run strip function for target file
+    moveNumber = 1
+    cAttackList = []
+    # Create a separate list for all computer attacks
+    while moveNumber < 5:
+        cAttackList.append(MoveStrip(cPokemon, moveNumber))
+        moveNumber += 1
+    return [cPokemon, cAttackList, computerImgList]
 
 
 def animateText(text, font, surface, x, y, color):
@@ -326,58 +317,60 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
     # Entire following block of code dedicated to drawing the battle screen for the
     # first time in the correct order, and with good readability
     DISPLAYSURF.blit(background, (0, 0))
-    drawText(pPokemon.name.upper() + "! I choose you!", font, DISPLAYSURF, 10, 400, BLACK)
+    drawText(pPokemon[0].upper() + "! I choose you!", font, DISPLAYSURF, 10, 400, BLACK)
     time.sleep(2)
     DISPLAYSURF.blit(playerImgList[1], (0, 195))
-    drawText(pPokemon.name, font, DISPLAYSURF, 200, 320, BLACK)
+    drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, BLACK)
     playerBar.drawRects()
     time.sleep(2)
     DISPLAYSURF.blit(background, (0, 0))
-    drawText("Computer sent out " + cPokemon.name + "!", font, DISPLAYSURF, 10, 400, BLACK)
+    drawText("Computer sent out " + cPokemon[0] + "!", font, DISPLAYSURF, 10, 400, BLACK)
     DISPLAYSURF.blit(playerImgList[1], (0, 195))
-    drawText(pPokemon.name, font, DISPLAYSURF, 200, 320, BLACK)
+    drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, BLACK)
     playerBar.drawRects()
     time.sleep(2)
     DISPLAYSURF.blit(background, (0, 0))
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
     # Main program loop. Loop terminates when one pokemon has fained.
-    while not fainted:
+    while fainted != True:
         # Executing the move selection functions for both the player and the computer
-        pMove = pMoveSelect(pMoveList, pPokemon, button1, button2, button3, button4)
+        pMove = pMoveSelect(pMoveList, pPokemon, playerBar, computerBar, playerImgList, computerImgList, button1,
+                            button2, button3, button4, cPokemon)
         cMove = cMoveSelect(cMoveList)
 
         # If player stat is faster, player attack sequence executes before computer
         # attack sequence. Else, computer attack sequence attacks first.
-        if pPokemon.speed < cPokemon.speed:
+        if pPokemon[2] < cPokemon[2]:
             # Execute attack sequence for player
-            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats)
+            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList,
+                            computerImgList)
             # Update the health bar if any changes have occured
             computerBar.updateBar(cPokemon)
             computerBar.drawRects()
             pygame.display.update()
-            if cPokemon[1] <= 0:
+            if int(cPokemon[1]) <= 0:
                 fainted = True
                 winner = "Player"
                 break  # break loop to end program
-            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats)
+            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerBar)
             playerBar.updateBar(pPokemon)
             playerBar.drawRects()
             pygame.display.update()
-            if pPokemon.is_fainted():
+            if int(pPokemon[1]) <= 0:
                 fainted = True
                 winner = "Computer"
                 break
         else:
-            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats)
+            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerBar)
             playerBar.updateBar(pPokemon)
             playerBar.drawRects()
             pygame.display.update()
-            if pPokemon.is_fainted():
+            if int(pPokemon[1]) <= 0:
                 fainted = True
                 winner = "Computer"
                 break
-            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats)
+            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList, computerImgList)
             computerBar.updateBar(cPokemon)
             computerBar.drawRects()
             pygame.display.update()
@@ -389,83 +382,89 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
     if winner == "Player":
         DISPLAYSURF.blit(endBackground, (0, 0))
         DISPLAYSURF.blit(playerImgList[0], (100, 375))
-        drawText("The winner is " + pPokemon.name + "!", font, TEXTSURF, 120, 100, BLACK)
+        drawText("The winner is " + pPokemon[0] + "!", font, TEXTSURF, 120, 100, BLACK)
         pygame.display.update()
         time.sleep(2)
     # If the computer won, computer pokemon is displayed on the victory screen
     else:
         DISPLAYSURF.blit(endBackground, (0, 0))
         DISPLAYSURF.blit(computerImgList[0], (100, 375))
-        drawText("The winner is " + cPokemon.name + "!", font, TEXTSURF, 120, 100, BLACK)
+        drawText("The winner is " + cPokemon[0] + "!", font, TEXTSURF, 120, 100, BLACK)
         pygame.display.update()
         time.sleep(2)
 
 
-def pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats):
-    # Function for applying the series of steps in the player attack sequence. Function
-    # simply decides which move function to apply based on the mode of attack being used.
-    # Mode 1 is a damage attack, 21 is a stat mod aimed at self, 22 is a stat mod aimed
-    # at a target.
+def pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats,
+                    playerBar, computerBar, playerImgList, computerImgList):
     DISPLAYSURF.blit(background, (0, 0))
-    displayMessage(pPokemon.name + " used " + pMove[5])
+    displayMessage(pPokemon[0] + " used " + pMove[5],
+                   pPokemon, playerBar, computerImgList,
+                   cPokemon, computerBar, playerImgList)
     time.sleep(1)
     mode = pMove[0]
     if mode == "1":
         cPokemon = DamageMod(pPokemon, pMove, cPokemon, pStats, cStats)
     elif mode == "21":
-        pStats = StatMod(pMove, pStats, pPokemon.name)
+        pStats = StatMod(pMove, pStats, pPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     elif mode == "22":
-        cStats = StatMod(pMove, cStats, cPokemon[0])
+        cStats = StatMod(pMove, cStats, cPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
 
-def cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats):
+def cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerBar):
     # Function handling the application of steps in computer attack. Only difference
     # from player attack sequence is that the parameters for target are aimed at the
     # player
     DISPLAYSURF.blit(background, (0, 0))
-    displayMessage(cPokemon[0] + " used " + cMove[5] + ".")
+    displayMessage(cPokemon[0] + " used " + cMove[5] + ".",
+                   pPokemon, playerBar,
+                   computerImgList, cPokemon,
+                   computerBar, playerImgList)
+
     time.sleep(1)
     mode = cMove[0]
     if mode == "1":
         pPokemon = DamageMod(cPokemon, cMove, pPokemon, cStats, pStats)
     elif mode == "21":
-        cStats = StatMod(cMove, cStats, cPokemon.name)
+        cStats = StatMod(cMove, cStats, cPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     elif mode == "22":
-        pStats = StatMod(cMove, pStats, pPokemon.name)
+        pStats = StatMod(cMove, pStats, pPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
 
 def DamageMod(attacker, attack, target, attackerStats, targetStats):
-    typeAdvantage = AdvantageCalc(attack, target)
+    typeAdvantage = AdvantageCalc(attack, target)  # Determine type advantage
+    # Get values for calculation from stat lists
     DMG = int(attack[2])
     aATK = StatIndex(attackerStats, "A")
     tDEF = StatIndex(targetStats, "D")
-
-    effect = DMG * (aATK / tDEF) * typeAdvantage
-    target.take_damage(effect)
-
+    effect = DMG * (aATK / tDEF) * typeAdvantage  # Calculate actual damage effect
+    target[1] = int(target[1]) - effect  # apply effect to the stat list for the target pokemon
+    print(attacker[0] + " dealt", effect, "damage!")
+    print("")
+    # Return the stat list containing the new value for health after application of
+    # damage effect.
     return target
 
 
-def StatMod(move, targetStats, defenderName):
+def StatMod(move, targetStats, defenderName, pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
     targetStat = move[4]
     effect = move[3]
     if targetStat == "A":  # If target stat is attack...
         if effect == "-":  # And the effect is negative...
             targetStats[0] -= 1  # target's attack is lowered
-            displayMessage(defenderName + "'s" + " Attack fell.")
+            displayMessage(defenderName + "'s" + " Attack fell.", pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
             return targetStats
         else:  # and the ffect is positive...
             targetStats[0] += 1  # target's atack is raised
-            displayMessage(defenderName + "'s" + " Attack rose.")
+            displayMessage(defenderName + "'s" + " Attack rose.", pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
             return targetStats
     else:  # if target stat is defense...
         if effect == "-":  # and effect is negative...
             targetStats[1] -= 1  # target's defense is lowered
-            displayMessage(defenderName + "'s" + " Defense fell.")
+            displayMessage(defenderName + "'s" + " Defense fell.", pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
             return targetStats
         else:  # and the effect is positive...
             targetStats[1] += 1  # target's defense is raised
-            displayMessage(defenderName + "'s" + " Defense rose.")
+            displayMessage(defenderName + "'s" + " Defense rose.", pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
             # Function returns the new stat levels for the target pokemon
             return targetStats
 
@@ -534,64 +533,47 @@ def AdvantageCalc(attack, target):
     return typeAdvantage
 
 
-if __name__ == '__main__':
-    import doctest
+def main():
+    global DISPLAYSURF, TEXTSURF, font, background, endBackground, playerImgList, choice
+    global button1, button2, button3, button4
 
-    doctest.testmod()
-    # Pygame initialization statments. Defining basic attributes of game window
     pygame.init()
-    DISPLAYSURF = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    TEXTSURF = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    SCREEN_WIDTH, SCREEN_HEIGHT = DISPLAYSURF.get_size()
+    DISPLAYSURF = pygame.display.set_mode((400, 600))
+    TEXTSURF = pygame.display.set_mode((400, 600))
     pygame.display.set_caption('Pokemon')
-    fpsClock = pygame.time.Clock()
-    FPS = 15
+
     font = pygame.font.SysFont(None, 20)
 
-    bulbImages = BulbImages()  # Functions for loading each set of pokemon images
-    bulbFront = bulbImages[0]
-    bulbBack = bulbImages[1]
+    bulbImages = BulbImages()
     squirtImages = SquirtImages()
-    squirtFront = squirtImages[0]
-    squirtBack = squirtImages[1]
     charImages = CharImages()
-    charFront = charImages[0]
-    charBack = charImages[1]
-    button = pygame.image.load("button.png")
+
+    button_img = pygame.image.load("assets/button.png")
     background = pygame.image.load("assets/background.png")
-    background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
     endBackground = pygame.image.load("assets/background.png")
-    endBackground = pygame.transform.scale(endBackground, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    pygame.transform.scale(bulbFront, (SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4))
-    pygame.transform.scale(bulbBack, (SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4))
-    pygame.transform.scale(squirtFront, (SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4))
-    pygame.transform.scale(squirtBack, (SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4))
-    pygame.transform.scale(charFront, (SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4))
-    pygame.transform.scale(charBack, (SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4))
-
+    # --- Pokémon selection ---
     charButton = Button()
-    charButton.assignImage(charFront)
+    charButton.assignImage(charImages[0])
     charButton.setCoords(0, 200)
+
     squirtButton = Button()
-    squirtButton.assignImage(squirtFront)
+    squirtButton.assignImage(squirtImages[0])
     squirtButton.setCoords(200, 200)
+
     bulbButton = Button()
-    bulbButton.assignImage(bulbFront)
+    bulbButton.assignImage(bulbImages[0])
     bulbButton.setCoords(100, 400)
 
-    # Drawing background and buttons for Pokemon selection screen
     DISPLAYSURF.blit(background, (0, 0))
-    charButton.drawButton(charFront)
-    squirtButton.drawButton(squirtFront)
-    bulbButton.drawButton(bulbFront)
+    charButton.drawButton(charImages[0])
+    squirtButton.drawButton(squirtImages[0])
+    bulbButton.drawButton(bulbImages[0])
 
     animateText("Choose your Pokemon...", font, TEXTSURF, 120, 100, BLACK)
     pygame.display.update()
 
-    choice = None
-    playerImgList = None
-    picked = 0
+    picked = False
     while not picked:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -602,26 +584,23 @@ if __name__ == '__main__':
                 if charButton.pressed(mouse):
                     choice = "Charmander"
                     playerImgList = charImages
-                    picked = 1
-                if squirtButton.pressed(mouse):
+                    picked = True
+                elif squirtButton.pressed(mouse):
                     choice = "Squirtle"
                     playerImgList = squirtImages
-                    picked = 1
-                if bulbButton.pressed(mouse):
+                    picked = True
+                elif bulbButton.pressed(mouse):
                     choice = "Bulbasaur"
                     playerImgList = bulbImages
-                    picked = 1
+                    picked = True
 
-    choices = ['Charmander', 'Squirtle', 'Bulbasaur', 'Eevee', 'Pikatchu']
-    targetFile = choice.lower() + '.txt'
-    for i in team_cards:
-        choices.remove(i)
+    choices = ["Charmander", "Squirtle", "Bulbasaur"]
+    choices.remove(choice)
 
-    pPokemon = team_cards[1]
-    pMoveList = pPokemon.moves
-    cPokemon, computerImgList = ComputerChoice(choices, bulbImages, squirtImages, charImages)
-    cMoveList = cPokemon.moves
-    button = pygame.image.load("button.png")
+    pPokemon, pMoveList = PlayerChoice(choice.lower() + ".txt")
+    cPokemon, cMoveList, computerImgList = ComputerChoice(
+        choices, charImages, bulbImages, squirtImages
+    )
 
     playerBar = HealthBar()
     playerBar.init(200, 305)
@@ -629,16 +608,25 @@ if __name__ == '__main__':
     computerBar.init(10, 35)
 
     button1 = Button()
-    button1.assignImage(button)
+    button1.assignImage(button_img)
     button1.setCoords(2, 468)
     button2 = Button()
-    button2.assignImage(button)
+    button2.assignImage(button_img)
     button2.setCoords(202, 468)
     button3 = Button()
-    button3.assignImage(button)
+    button3.assignImage(button_img)
     button3.setCoords(2, 535)
     button4 = Button()
-    button4.assignImage(button)
+    button4.assignImage(button_img)
     button4.setCoords(202, 535)
 
-    Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgList, playerBar, computerBar)
+    Battle(
+        pPokemon, pMoveList,
+        cPokemon, cMoveList,
+        playerImgList, computerImgList,
+        playerBar, computerBar
+    )
+
+
+if __name__ == "__main__":
+    main()
