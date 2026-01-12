@@ -15,6 +15,7 @@ BG = pygame.transform.scale(BG, (SCREEN_WIDTH, SCREEN_HEIGHT))
 def get_font(size):
     return pygame.font.Font("assets/font.ttf", size)
 
+
 class Button:
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
         self.image = image
@@ -76,6 +77,7 @@ class Card:
     def clicked(self, mouse_pos):
         return self.rect.collidepoint(mouse_pos)
 
+
 class TeamSlot:
     def __init__(self, rect):
         self.rect = pygame.Rect(rect)
@@ -111,28 +113,28 @@ card_x = (SCREEN_WIDTH - (4 * card_w + 3 * card_spacing)) // 2
 card_y = SCREEN_HEIGHT // 2.8
 
 cards = [
-    Card("J.Knut", {"HP": 250, "ATK": 50, "Abilities": "", "1": "the rich"},
+    Card("Gimighoul", {"HP": 50, "ATK": 50, "Ability": "", "": "Rich"},
          (card_x + 0 * (card_w + card_spacing), card_y, card_w, card_h)),
 
-    Card("Michal", {"HP": 150, "ATK": 69, "Abilities": "", "1": "halfling"},
+    Card("Clefairy", {"HP": 48, "ATK": 39, "Ability": "", "": "Minimize"},
          (card_x + 1 * (card_w + card_spacing), card_y, card_w, card_h)),
 
-    Card("Rome", {"HP": 250, "ATK": 69, "Abilities": "", "1": "steal"},
+    Card("Meowth", {"HP": 35, "ATK": 44, "Ability": "", "": "Steal"},
          (card_x + 2 * (card_w + card_spacing), card_y, card_w, card_h)),
 
-    Card("Squirtle", {"HP": 44, "ATK": 48, "Abilities": "", "1": "squirt"},
+    Card("Squirtle", {"HP": 44, "ATK": 48, "Ability": "", "": "Spd Boost"},
          (card_x + 3 * (card_w + card_spacing), card_y, card_w, card_h)),
 
-    Card("Pikachu", {"HP": 35, "ATK": 55, "Abilities": "", "1": "shock"},
+    Card("Pikachu", {"HP": 35, "ATK": 55, "Ability": "", "": "Paralyze"},
          (card_x + 0 * (card_w + card_spacing), card_y + SCREEN_HEIGHT // 3.6, card_w, card_h)),
 
-    Card("Eevee", {"HP": 55, "ATK": 55, "Abilities": "", "1": "Adapt"},
+    Card("Eevee", {"HP": 55, "ATK": 55, "Ability": "", "": "Adaptable"},
          (card_x + 1 * (card_w + card_spacing), card_y + SCREEN_HEIGHT // 3.6, card_w, card_h)),
 
-    Card("Bulbasaur", {"HP": 45, "ATK": 49, "Abilities": "", "1": "Poison"},
+    Card("Bulbasaur", {"HP": 45, "ATK": 49, "Ability": "", "": "Poison"},
          (card_x + 2 * (card_w + card_spacing), card_y + SCREEN_HEIGHT // 3.6, card_w, card_h)),
 
-    Card("Charmander", {"HP": 39, "ATK": 52, "Abilities": "", "1": "Burn"},
+    Card("Charmander", {"HP": 39, "ATK": 52, "Ability": "", "": "Burn"},
          (card_x + 3 * (card_w + card_spacing), card_y + SCREEN_HEIGHT // 3.6, card_w, card_h)),
 ]
 
@@ -210,7 +212,7 @@ def main_menu():
         SCREEN.blit(BG, (0, 0))
         mouse_pos = pygame.mouse.get_pos()
 
-        title = get_font(100).render("Pokemon ;)", True, "#b68f40")
+        title = get_font(100).render("Pythonmon", True, "#b68f40")
         SCREEN.blit(title, title.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 6 + 100)))
 
         NEW_GAME = Button(None, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40),
@@ -246,5 +248,6 @@ def main_menu():
                     sys.exit()
 
         pygame.display.update()
+
 
 main_menu()
