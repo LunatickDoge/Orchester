@@ -56,27 +56,8 @@ def ClearTerminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def drawText(text, font, surface, x, y, color):
-    # Simple function for drawing text onto the screen. Function contains expression
-    # for word wrap.
-    if len(text) > 49:
-        textLine1 = text[:48]
-        textLine2 = text[48:]
-    else:
-        textLine1 = text
-        textLine2 = ""
-
-    textobj1 = font.render(textLine1, 1, color)
-    textrect1 = textobj1.get_rect()
-    textrect1.topleft = (x, y)
-    surface.blit(textobj1, textrect1)
-    pygame.display.update()
-
-    textobj2 = font.render(textLine2, 1, color)
-    textrect2 = textobj2.get_rect()
-    textrect2.topleft = (x, y + 10)
-    surface.blit(textobj2, textrect2)
-    pygame.display.update()
+def drawText(text, font, surf, x, y, color=BLACK):
+    surf.blit(font.render(text, True, color), (x, y))
 
 
 def drawMoveText(text, font, surface, x, y, color):
@@ -104,6 +85,10 @@ def displayMessage(message, pPokemon, playerBar, computerImgList, cPokemon, comp
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     time.sleep(1)
     DISPLAYSURF.blit(background, (0, 0))
+
+
+def get_active_pokemon(team, index):
+    return team[index]["pokemon"], team[index]["moves"]
 
 
 def cMoveSelect(cMoveList):
@@ -187,6 +172,19 @@ def SquirtImages():
         newImg = pygame.image.load(x)
         squirtArray.append(newImg)
     return squirtArray
+
+
+def ballp():
+    global openball, closedball, background
+    DISPLAYSURF.blit(closedball, (100, 250))
+    DISPLAYSURF.blit(closedball, (300, 100))
+    pygame.display.update()
+    time.sleep(1.5)
+    DISPLAYSURF.blit(background, (0, 0))
+    DISPLAYSURF.blit(openball, (300, 100))
+    DISPLAYSURF.blit(openball, (100, 250))
+    pygame.display.update()
+    time.sleep(0.5)
 
 
 class HealthBar():
@@ -319,12 +317,41 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
     DISPLAYSURF.blit(background, (0, 0))
     drawText(pPokemon[0].upper() + "! I choose you!", font, DISPLAYSURF, 10, 400, BLACK)
     time.sleep(2)
-    DISPLAYSURF.blit(playerImgList[1], (0, 195))
+    ballp()
+    for i in range(300):
+        if i < 100:
+            DISPLAYSURF.blit(background, (0, 0))
+            DISPLAYSURF.blit(playerImgList[1], (0 + i / 2, 195))
+            pygame.display.update()
+        elif i < 200:
+            DISPLAYSURF.blit(background, (0, 0))
+            DISPLAYSURF.blit(playerImgList[1], (50 +  - i / 2, 195))
+            pygame.display.update()
+        else:
+            DISPLAYSURF.blit(background, (0, 0))
+            DISPLAYSURF.blit(playerImgList[1], (-50 + i / 6, 195))
+            pygame.display.update()
     drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, BLACK)
     playerBar.drawRects()
     time.sleep(2)
     DISPLAYSURF.blit(background, (0, 0))
     drawText("Computer sent out " + cPokemon[0] + "!", font, DISPLAYSURF, 10, 400, BLACK)
+    for i in range(300):
+        if i < 100:
+            DISPLAYSURF.blit(background, (0, 0))
+            DISPLAYSURF.blit(playerImgList[1], (0, 195))
+            DISPLAYSURF.blit(computerImgList[0], (200 + i / 2, 0))
+            pygame.display.update()
+        elif i < 200:
+            DISPLAYSURF.blit(background, (0, 0))
+            DISPLAYSURF.blit(playerImgList[1], (0, 195))
+            DISPLAYSURF.blit(computerImgList[0], (250 - i / 2, 0))
+            pygame.display.update()
+        else:
+            DISPLAYSURF.blit(background, (0, 0))
+            DISPLAYSURF.blit(playerImgList[1], (0, 195))
+            DISPLAYSURF.blit(computerImgList[0], (150 + i / 6, 0))
+            pygame.display.update()
     DISPLAYSURF.blit(playerImgList[1], (0, 195))
     drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, BLACK)
     playerBar.drawRects()
@@ -394,6 +421,48 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
         time.sleep(2)
     import Menu
     Menu.main_menu()
+
+
+def LoadPlayerTeam(team_names):
+    team = []
+    for name in team_names:
+        pokemon, moves = PlayerChoice(name.lower() + ".txt")
+        pokemon[1] = int(pokemon[1])  # current HP
+        pokemon.append(True)          # alive flag
+        team.append({
+            "pokemon": pokemon,
+            "moves": moves
+        })
+    return team
+
+
+def force_switch(team):
+    for i, slot in enumerate(team):
+        if slot["pokemon"][11]:
+            return i
+    return None
+
+
+def choose_switch(team, screen, font, background):
+    while True:
+        screen.blit(background, (0, 0))
+        drawText("Choose a Pokémon to switch to:", font, screen, 40, 50)
+
+        y = 120
+        for i, slot in enumerate(team):
+            name = slot["pokemon"][0]
+            alive = slot["pokemon"][11]
+            color = GREEN if alive else RED
+            drawText(f"{i+1}. {name}", font, screen, 60, y, color)
+            y += 40
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                idx = event.key - pygame.K_1
+                if 0 <= idx < len(team) and team[idx]["pokemon"][11]:
+                    return idx
 
 
 def pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats,
@@ -535,9 +604,9 @@ def AdvantageCalc(attack, target):
     return typeAdvantage
 
 
-def main():
+def main(team_names):
     global DISPLAYSURF, TEXTSURF, font, background, endBackground, playerImgList, choice
-    global button1, button2, button3, button4
+    global button1, button2, button3, button4, openball, closedball
 
     pygame.init()
     DISPLAYSURF = pygame.display.set_mode((400, 600))
@@ -553,6 +622,12 @@ def main():
     button_img = pygame.image.load("assets/button.png")
     background = pygame.image.load("assets/background.png")
     endBackground = pygame.image.load("assets/background.png")
+    openball = pygame.transform.scale(
+        pygame.image.load('assets/open.png'), (20, 20)
+    )
+    closedball = pygame.transform.scale(
+        pygame.image.load('assets/closed.png'), (20, 20)
+    )
 
     # --- Pokémon selection ---
     charButton = Button()
@@ -599,7 +674,8 @@ def main():
     choices = ["Charmander", "Squirtle", "Bulbasaur"]
     choices.remove(choice)
 
-    pPokemon, pMoveList = PlayerChoice(choice.lower() + ".txt")
+    player_team = LoadPlayerTeam(team_names)
+    active_index = 0
     cPokemon, cMoveList, computerImgList = ComputerChoice(
         choices, charImages, bulbImages, squirtImages
     )
@@ -629,6 +705,3 @@ def main():
         playerBar, computerBar
     )
 
-
-if __name__ == "__main__":
-    main()

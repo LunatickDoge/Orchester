@@ -16,6 +16,10 @@ def get_font(size):
     return pygame.font.Font("assets/font.ttf", size)
 
 
+def get_team_names():
+    return [card.name for card in team_cards]
+
+
 class Button:
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
         self.image = image
@@ -236,7 +240,7 @@ def main_menu():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if NEW_GAME.checkForInput(mouse_pos):
                     pygame.display.quit()
-                    Battle.main()
+                    Battle.main(get_team_names())
                     pygame.quit()
                     sys.exit()
 
