@@ -4,6 +4,9 @@ import sys
 import time
 import random
 from pygame.locals import *
+import socket
+import threading
+
 
 # COLORS
 # R    G    B
@@ -99,7 +102,7 @@ def redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerIm
     pygame.display.update()
 
 
-def displayMessage(message, pPokemon=None, playerBar=None, computerImgList=None, cPokemon=None, computerBar=None, playerImgList=None):
+def displayMessage(message, pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
     drawText(message, font, DISPLAYSURF, 10, 400, BLACK)
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     time.sleep(1)
@@ -117,6 +120,7 @@ def pMoveSelect(pMoveList, pPokemon, playerBar, computerBar, playerImgList, comp
     # buttons necessary to guide the player in selecting a move for their pokemon.
 
     # Redrawing background image to clear text
+    global Move
     DISPLAYSURF.blit(background, (0, 0))
     # Drawing the prompt in the text section
     drawText("What will " + pPokemon[0] + " do?", font, DISPLAYSURF, 10, 400, BLACK)
@@ -202,6 +206,13 @@ class HealthBar():
         self.negDimensions = (150, 5)
         self.posDimensions = [150, 5]
 
+    def updateBar(self, pokemonList):
+        maxHealth = pokemonList[8]
+        currentHealth = pokemonList[1]
+        healthProportion = int(currentHealth) / float(maxHealth)
+        newDimension = healthProportion * self.negDimensions[0]
+        self.posDimensions[0] = newDimension
+
     def drawRects(self):
         # Function for drawing the actual rectangles that make up the health bar.
         # (x,y,width,height)
@@ -209,12 +220,7 @@ class HealthBar():
         pygame.draw.rect(DISPLAYSURF, GREEN, (self.position, self.posDimensions))
         pygame.display.update()
 
-    def updateBar(self, pokemonList):
-        maxHealth = pokemonList[8]
-        currentHealth = pokemonList[1]
-        healthProportion = int(currentHealth) / float(maxHealth)
-        newDimension = healthProportion * self.negDimensions[0]
-        self.posDimensions[0] = newDimension
+
 
 
 class Button():
@@ -303,6 +309,7 @@ def animateText(text, font, surface, x, y, color):
         pygame.display.update()
         j += 1
 
+
 def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgList, playerBar, computerBar):
     global winner
     pStats = [1, 1]
@@ -331,44 +338,42 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
     # Main program loop. Loop terminates when one pokemon has fained.
     while fainted != True:
         # Executing the move selection functions for both the player and the computer
-        pMove = pMoveSelect(pMoveList, pPokemon, playerBar, computerBar, playerImgList, computerImgList, button1, button2, button3, button4, cPokemon)
+        pMove = pMoveSelect(pMoveList, pPokemon, playerBar, computerBar, playerImgList, computerImgList, button1,
+                            button2, button3, button4, cPokemon)
         cMove = cMoveSelect(cMoveList)
 
         # If player stat is faster, player attack sequence executes before computer
         # attack sequence. Else, computer attack sequence attacks first.
         if pPokemon[2] < cPokemon[2]:
-            # Player goes first
+            # Execute attack sequence for player
             pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList,
                             computerImgList)
+            # Update the health bar if any changes have occured
             computerBar.updateBar(cPokemon)
             computerBar.drawRects()
             pygame.display.update()
-            if cPokemon[1] <= 0:
+            if int(cPokemon[1]) <= 0:
                 fainted = True
                 winner = "Player"
-                break
-            # Pass the missing arguments here
-            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerImgList, computerBar,
-                            playerImgList)
+                break  # break loop to end program
+            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerBar)
             playerBar.updateBar(pPokemon)
             playerBar.drawRects()
             pygame.display.update()
-            if pPokemon[1] <= 0:
+            if int(pPokemon[1]) <= 0:
                 fainted = True
                 winner = "Computer"
                 break
         else:
-            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerImgList, computerBar,
-                            playerImgList)
+            cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerBar)
             playerBar.updateBar(pPokemon)
             playerBar.drawRects()
             pygame.display.update()
-            if pPokemon[1] <= 0:
+            if int(pPokemon[1]) <= 0:
                 fainted = True
                 winner = "Computer"
                 break
-            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList,
-                            computerImgList)
+            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList, computerImgList)
             computerBar.updateBar(cPokemon)
             computerBar.drawRects()
             pygame.display.update()
@@ -403,25 +408,29 @@ def pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats,
     if mode == "1":
         cPokemon = DamageMod(pPokemon, pMove, cPokemon, pStats, cStats)
     elif mode == "21":
-        pStats = StatMod(pMove, pStats, pPokemon[0])
+        pStats = StatMod(pMove, pStats, pPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     elif mode == "22":
-        cStats = StatMod(pMove, cStats, cPokemon[0])
+        cStats = StatMod(pMove, cStats, cPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
 
-def cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerImgList, computerBar, playerImgList):
-    displayMessage(
-        cPokemon[0] + " used " + cMove[5] + ".",
-        pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList
-    )
+def cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, computerBar):
+    # Function handling the application of steps in computer attack. Only difference
+    # from player attack sequence is that the parameters for target are aimed at the
+    # player
     DISPLAYSURF.blit(background, (0, 0))
+    displayMessage(cPokemon[0] + " used " + cMove[5] + ".",
+                   pPokemon, playerBar,
+                   computerImgList, cPokemon,
+                   computerBar, playerImgList)
+
     time.sleep(1)
     mode = cMove[0]
     if mode == "1":
         pPokemon = DamageMod(cPokemon, cMove, pPokemon, cStats, pStats)
     elif mode == "21":
-        cStats = StatMod(cMove, cStats, cPokemon[0])
+        cStats = StatMod(cMove, cStats, cPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     elif mode == "22":
-        pStats = StatMod(cMove, pStats, pPokemon[0])
+        pStats = StatMod(cMove, pStats, pPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
 
 def DamageMod(attacker, attack, target, attackerStats, targetStats):
@@ -439,26 +448,26 @@ def DamageMod(attacker, attack, target, attackerStats, targetStats):
     return target
 
 
-def StatMod(move, targetStats, defenderName):
+def StatMod(move, targetStats, defenderName, pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
     targetStat = move[4]
     effect = move[3]
     if targetStat == "A":  # If target stat is attack...
         if effect == "-":  # And the effect is negative...
             targetStats[0] -= 1  # target's attack is lowered
-            displayMessage(defenderName + "'s" + " Attack fell.")
+            displayMessage(defenderName + "'s" + " Attack fell.", pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
             return targetStats
         else:  # and the ffect is positive...
             targetStats[0] += 1  # target's atack is raised
-            displayMessage(defenderName + "'s" + " Attack rose.")
+            displayMessage(defenderName + "'s" + " Attack rose.", pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
             return targetStats
     else:  # if target stat is defense...
         if effect == "-":  # and effect is negative...
             targetStats[1] -= 1  # target's defense is lowered
-            displayMessage(defenderName + "'s" + " Defense fell.")
+            displayMessage(defenderName + "'s" + " Defense fell.", pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
             return targetStats
         else:  # and the effect is positive...
             targetStats[1] += 1  # target's defense is raised
-            displayMessage(defenderName + "'s" + " Defense rose.")
+            displayMessage(defenderName + "'s" + " Defense rose.", pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
             # Function returns the new stat levels for the target pokemon
             return targetStats
 
@@ -526,8 +535,9 @@ def AdvantageCalc(attack, target):
     # function returns the type advantage for use in the damage calculation
     return typeAdvantage
 
+
 def main():
-    global DISPLAYSURF, TEXTSURF, font, background, endBackground
+    global DISPLAYSURF, TEXTSURF, font, background, endBackground, playerImgList, choice
     global button1, button2, button3, button4
 
     pygame.init()
@@ -600,10 +610,18 @@ def main():
     computerBar = HealthBar()
     computerBar.init(10, 35)
 
-    button1 = Button(); button1.assignImage(button_img); button1.setCoords(2, 468)
-    button2 = Button(); button2.assignImage(button_img); button2.setCoords(202, 468)
-    button3 = Button(); button3.assignImage(button_img); button3.setCoords(2, 535)
-    button4 = Button(); button4.assignImage(button_img); button4.setCoords(202, 535)
+    button1 = Button()
+    button1.assignImage(button_img)
+    button1.setCoords(2, 468)
+    button2 = Button()
+    button2.assignImage(button_img)
+    button2.setCoords(202, 468)
+    button3 = Button()
+    button3.assignImage(button_img)
+    button3.setCoords(2, 535)
+    button4 = Button()
+    button4.assignImage(button_img)
+    button4.setCoords(202, 535)
 
     Battle(
         pPokemon, pMoveList,
@@ -612,5 +630,25 @@ def main():
         playerBar, computerBar
     )
 
+def wait_for_start():
+    server_ip = input("Server IP: ")
+    server = (server_ip, 5678)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('', 0))
+
+    sock.sendto("JOIN".encode(), server)
+
+    print("Waiting for second player...")
+
+    while True:
+        data, _ = sock.recvfrom(1024)
+        msg = data.decode()
+
+        if msg == "START":
+            print("Battle starting!")
+            break
+
 if __name__ == "__main__":
+    wait_for_start()
     main()
