@@ -374,7 +374,7 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
             computerBar.updateBar(cPokemon)
             computerBar.drawRects()
             pygame.display.update()
-            if cPokemon[1] <= 0:
+            if int(cPokemon[1]) <= 0:
                 fainted = True
                 winner = "Player"
                 break
@@ -392,6 +392,8 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
         drawText("The winner is " + cPokemon[0] + "!", font, TEXTSURF, 120, 100, BLACK)
         pygame.display.update()
         time.sleep(2)
+    import Menu
+    Menu.main_menu()
 
 
 def pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats,
