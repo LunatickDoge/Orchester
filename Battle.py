@@ -56,7 +56,7 @@ def ClearTerminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def drawText(text, font, surf, x, y, color=BLACK):
+def drawText(text, font, surf, x, y, color=WHITE):
     surf.blit(font.render(text, True, color), (x, y))
 
 
@@ -70,18 +70,18 @@ def drawMoveText(text, font, surface, x, y, color):
 
 def redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
     DISPLAYSURF.blit(playerImgList[1], (0, 195))
-    drawText(pPokemon[0], font, DISPLAYSURF, 200, 315, BLACK)
+    drawText(pPokemon[0], font, DISPLAYSURF, 200, 315, WHITE)
     playerBar.updateBar(pPokemon)
     playerBar.drawRects()
     DISPLAYSURF.blit(computerImgList[0], (200, 0))
-    drawText(cPokemon[0], font, DISPLAYSURF, 10, 45, BLACK)
+    drawText(cPokemon[0], font, DISPLAYSURF, 10, 45, WHITE)
     computerBar.updateBar(cPokemon)
     computerBar.drawRects()
     pygame.display.update()
 
 
 def displayMessage(message, pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
-    drawText(message, font, DISPLAYSURF, 10, 400, BLACK)
+    drawText(message, font, DISPLAYSURF, 10, 400, WHITE)
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
     time.sleep(1)
     DISPLAYSURF.blit(background, (0, 0))
@@ -105,7 +105,7 @@ def pMoveSelect(pMoveList, pPokemon, playerBar, computerBar, playerImgList, comp
     global Move
     DISPLAYSURF.blit(background, (0, 0))
     # Drawing the prompt in the text section
-    drawText("What will " + pPokemon[0] + " do?", font, DISPLAYSURF, 10, 400, BLACK)
+    drawText("What will " + pPokemon[0] + " do?", font, DISPLAYSURF, 10, 400, WHITE)
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
     # Drawing buttons for use in the move selection process. Buttons are separate
@@ -315,7 +315,7 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
     # Entire following block of code dedicated to drawing the battle screen for the
     # first time in the correct order, and with good readability
     DISPLAYSURF.blit(background, (0, 0))
-    drawText(pPokemon[0].upper() + "! I choose you!", font, DISPLAYSURF, 10, 400, BLACK)
+    drawText(pPokemon[0].upper() + "! I choose you!", font, DISPLAYSURF, 10, 400, WHITE)
     time.sleep(2)
     ballp()
     for i in range(300):
@@ -331,11 +331,11 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
             DISPLAYSURF.blit(background, (0, 0))
             DISPLAYSURF.blit(playerImgList[1], (-50 + i / 6, 195))
             pygame.display.update()
-    drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, BLACK)
+    drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, WHITE)
     playerBar.drawRects()
     time.sleep(2)
     DISPLAYSURF.blit(background, (0, 0))
-    drawText("Computer sent out " + cPokemon[0] + "!", font, DISPLAYSURF, 10, 400, BLACK)
+    drawText("Computer sent out " + cPokemon[0] + "!", font, DISPLAYSURF, 10, 400, WHITE)
     for i in range(300):
         if i < 100:
             DISPLAYSURF.blit(background, (0, 0))
@@ -353,7 +353,7 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
             DISPLAYSURF.blit(computerImgList[0], (150 + i / 6, 0))
             pygame.display.update()
     DISPLAYSURF.blit(playerImgList[1], (0, 195))
-    drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, BLACK)
+    drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, WHITE)
     playerBar.drawRects()
     time.sleep(2)
     DISPLAYSURF.blit(background, (0, 0))
@@ -409,14 +409,14 @@ def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgL
     if winner == "Player":
         DISPLAYSURF.blit(endBackground, (0, 0))
         DISPLAYSURF.blit(playerImgList[0], (100, 375))
-        drawText("The winner is " + pPokemon[0] + "!", font, TEXTSURF, 120, 100, BLACK)
+        drawText("The winner is " + pPokemon[0] + "!", font, TEXTSURF, 120, 100, WHITE)
         pygame.display.update()
         time.sleep(2)
     # If the computer won, computer pokemon is displayed on the victory screen
     else:
         DISPLAYSURF.blit(endBackground, (0, 0))
         DISPLAYSURF.blit(computerImgList[0], (100, 375))
-        drawText("The winner is " + cPokemon[0] + "!", font, TEXTSURF, 120, 100, BLACK)
+        drawText("The winner is " + cPokemon[0] + "!", font, TEXTSURF, 120, 100, WHITE)
         pygame.display.update()
         time.sleep(2)
     import Menu
@@ -501,18 +501,14 @@ def cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, comput
         pStats = StatMod(cMove, pStats, pPokemon[0], pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
 
-def DamageMod(attacker, attack, target, attackerStats, targetStats):
-    typeAdvantage = AdvantageCalc(attack, target)  # Determine type advantage
-    # Get values for calculation from stat lists
-    DMG = int(attack[2])
-    aATK = StatIndex(attackerStats, "A")
-    tDEF = StatIndex(targetStats, "D")
-    effect = DMG * (aATK / tDEF) * typeAdvantage  # Calculate actual damage effect
-    target[1] = int(target[1]) - effect  # apply effect to the stat list for the target pokemon
-    print(attacker[0] + " dealt", effect, "damage!")
-    print("")
-    # Return the stat list containing the new value for health after application of
-    # damage effect.
+def DamageMod(attacker, move, target, atk_stats, def_stats):
+    dmg = int(move[2])
+    multiplier = AdvantageCalc(move, target)
+    atk = StatIndex(atk_stats, "A")
+    defense = StatIndex(def_stats, "D")
+    damage = int(dmg * (atk / defense) * multiplier)
+
+    target[1] -= damage
     return target
 
 
@@ -540,68 +536,18 @@ def StatMod(move, targetStats, defenderName, pPokemon, playerBar, computerImgLis
             return targetStats
 
 
-def StatIndex(stats, statType):
-    # The attack and defense stats in pokemon are dictated by a hard scale, running
-    # from 1/4 to 4. The exact scale can be seen represented in the list in this function.
-    # Unfortunately, there is no way to easily track the stats of a pokemon accurately
-    # throughout the course of a battle. The purpose of this function is to transform a
-    # much easier form of stat tracking into the real stat for the pokemon. The stats
-    # are tracked in the battle as whole integer levels. Those levels are used as the
-    # index location when this is called, allowing the tracking stat to correspond to
-    # the true stat value.
-
-    statIndex = [(1.0 / 4), (2.0 / 7), (1.0 / 3), (2.0 / 5), (1.0 / 2), (2.0 / 3), 1, 1.5, 2, 2.5, 3, 3.5, 4]
-    # If statement simply directs the function to the correct tracking value when
-    # quereied. One of the parameters is stat type, the conditional for the if statement.
-    if statType == "A":
-        statInQuestion = stats[0]
-    else:
-        statInQuestion = stats[1]
-    # assigning the trueStat variable a value.
-    trueStat = statIndex[statInQuestion + 5]
-    # returns the true stat for use in the damage calculation
-    return trueStat
+def StatIndex(stats, stat):
+    table = [0.25, 0.33, 0.5, 0.66, 1, 1.5, 2, 2.5, 3]
+    return table[stats[0] + 4] if stat == "A" else table[stats[1] + 4]
 
 
 def AdvantageCalc(attack, target):
-    # Function that handles the calculation of the type advantage for any given attack.
-    # Every move and every pokemon has a "Type". Some types are more effective against
-    # others, leading to the addition of a multiplier to damage based moves. Function
-    # makes a combination of the type keys for each move. The first letter in the combo
-    # is the type of the attack, the second is the type key for the target recieving
-    # the attack. A set of If statements takes the combo and determines the appropriate
-    # type advantage.
-
-    global typeAdvantage
-    combo = attack[1] + target[3]  # Combinbing the type keys for the combo key
-
-    # checking the combo key against known combinations.
-    if combo == "FG":
-        typeAdvantage = 2
-    elif combo == "FW":
-        typeAdvantage = .5
-    elif combo == "FN":
-        typeAdvantage = 1
-    elif combo == "WF":
-        typeAdvantage = 2
-    elif combo == "WG":
-        typeAdvantage = .5
-    elif combo == "WN":
-        typeAdvantage = 1
-    elif combo == "GF":
-        typeAdvantage = .5
-    elif combo == "GW":
-        typeAdvantage = 2
-    elif combo == "GN":
-        typeAdvantage = 1
-    elif combo == "NF":
-        typeAdvantage = 1
-    elif combo == "NW":
-        typeAdvantage = 1
-    elif combo == "NG":
-        typeAdvantage = 1
-    # function returns the type advantage for use in the damage calculation
-    return typeAdvantage
+    combo = attack[1] + target[3]
+    chart = {
+        "FG": 2, "FW": .5, "GF": .5, "GW": 2,
+        "WF": 2, "WG": .5
+    }
+    return chart.get(combo, 1)
 
 
 def main(team_names):
@@ -611,97 +557,74 @@ def main(team_names):
     pygame.init()
     DISPLAYSURF = pygame.display.set_mode((400, 600))
     TEXTSURF = pygame.display.set_mode((400, 600))
-    pygame.display.set_caption('Pokemon')
+    pygame.display.set_caption('Pythonmon')
 
-    font = pygame.font.SysFont(None, 20)
-
-    bulbImages = BulbImages()
-    squirtImages = SquirtImages()
-    charImages = CharImages()
-
-    button_img = pygame.image.load("assets/button.png")
-    background = pygame.image.load("assets/background.png")
-    endBackground = pygame.image.load("assets/background.png")
-    openball = pygame.transform.scale(
-        pygame.image.load('assets/open.png'), (20, 20)
-    )
-    closedball = pygame.transform.scale(
-        pygame.image.load('assets/closed.png'), (20, 20)
-    )
-
-    # --- Pokémon selection ---
-    charButton = Button()
-    charButton.assignImage(charImages[0])
-    charButton.setCoords(0, 200)
-
-    squirtButton = Button()
-    squirtButton.assignImage(squirtImages[0])
-    squirtButton.setCoords(200, 200)
-
-    bulbButton = Button()
-    bulbButton.assignImage(bulbImages[0])
-    bulbButton.setCoords(100, 400)
-
-    DISPLAYSURF.blit(background, (0, 0))
-    charButton.drawButton(charImages[0])
-    squirtButton.drawButton(squirtImages[0])
-    bulbButton.drawButton(bulbImages[0])
-
-    animateText("Choose your Pokemon...", font, TEXTSURF, 120, 100, BLACK)
-    pygame.display.update()
-
-    picked = False
-    while not picked:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == MOUSEBUTTONDOWN:
-                mouse = pygame.mouse.get_pos()
-                if charButton.pressed(mouse):
-                    choice = "Charmander"
-                    playerImgList = charImages
-                    picked = True
-                elif squirtButton.pressed(mouse):
-                    choice = "Squirtle"
-                    playerImgList = squirtImages
-                    picked = True
-                elif bulbButton.pressed(mouse):
-                    choice = "Bulbasaur"
-                    playerImgList = bulbImages
-                    picked = True
-
-    choices = ["Charmander", "Squirtle", "Bulbasaur"]
-    choices.remove(choice)
+    font = pygame.font.SysFont(None, 22)
 
     player_team = LoadPlayerTeam(team_names)
-    active_index = 0
-    cPokemon, cMoveList, computerImgList = ComputerChoice(
-        choices, charImages, bulbImages, squirtImages
-    )
+    computer_team = LoadPlayerTeam(["Charmander"])
 
-    playerBar = HealthBar()
-    playerBar.init(200, 305)
-    computerBar = HealthBar()
-    computerBar.init(10, 35)
+    player_idx = 0
+    comp_idx = 0
 
-    button1 = Button()
-    button1.assignImage(button_img)
-    button1.setCoords(2, 468)
-    button2 = Button()
-    button2.assignImage(button_img)
-    button2.setCoords(202, 468)
-    button3 = Button()
-    button3.assignImage(button_img)
-    button3.setCoords(2, 535)
-    button4 = Button()
-    button4.assignImage(button_img)
-    button4.setCoords(202, 535)
+    pStats = [1, 1]
+    cStats = [1, 1]
 
-    Battle(
-        pPokemon, pMoveList,
-        cPokemon, cMoveList,
-        playerImgList, computerImgList,
-        playerBar, computerBar
-    )
+    while True:
 
+        openball = pygame.transform.scale(
+            pygame.image.load('assets/open.png'), (20, 20)
+        )
+        closedball = pygame.transform.scale(
+            pygame.image.load('assets/closed.png'), (20, 20)
+        )
+
+        animateText("Choose your Pokemon...", font, TEXTSURF, 120, 100, WHITE)
+        pygame.display.update()
+
+        pPokemon, pMoves = get_active_pokemon(player_team, player_idx)
+        cPokemon, cMoves = get_active_pokemon(computer_team, comp_idx)
+
+        DISPLAYSURF.blit(background, (0, 0))
+        drawText(f"{pPokemon[0]} HP: {pPokemon[1]}", font, DISPLAYSURF, 40, 400)
+        drawText(f"{cPokemon[0]} HP: {cPokemon[1]}", font, DISPLAYSURF, 40, 60)
+        drawText("1–4: Attack | S: Switch", font, DISPLAYSURF, 40, 450)
+        pygame.display.update()
+
+        action = None
+        while action is None:
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_s:
+                        action = "SWITCH"
+                    elif K_1 <= event.key <= K_4:
+                        action = pMoves[event.key - K_1]
+
+        if action == "SWITCH":
+            player_idx = choose_switch(player_team, DISPLAYSURF, font, background)
+            continue
+
+        # ATTACK PHASE
+        DamageMod(pPokemon, action, cPokemon, pStats, cStats)
+
+        if cPokemon[1] <= 0:
+            cPokemon[11] = False
+            comp_idx = force_switch(computer_team)
+            if comp_idx is None:
+                drawText("YOU WIN!", font, DISPLAYSURF, 150, 300)
+                pygame.display.update()
+                time.sleep(2)
+                return
+
+        DamageMod(cPokemon, random.choice(cMoves), pPokemon, cStats, pStats)
+
+        if pPokemon[1] <= 0:
+            pPokemon[11] = False
+            player_idx = force_switch(player_team)
+            if player_idx is None:
+                drawText("YOU LOSE!", font, DISPLAYSURF, 150, 300)
+                pygame.display.update()
+                time.sleep(2)
+                return
+
+        fpsClock.tick(FPS)
