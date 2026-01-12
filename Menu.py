@@ -35,6 +35,7 @@ class Button:
         self.rect = self.image.get_rect(center=self.pos)
 
     def draw(self, screen, mouse):
+
         color = self.hover if self.rect.collidepoint(mouse) else self.base
         self.image = self.font.render(self.text, True, color)
         screen.blit(self.image, self.rect)
