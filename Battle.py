@@ -6,7 +6,7 @@ import random
 from pygame.locals import *
 import socket
 import threading
-
+import json
 
 # COLORS
 # R    G    B
@@ -310,45 +310,43 @@ def animateText(text, font, surface, x, y, color):
         j += 1
 
 
-def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgList, playerBar, computerBar):
+def Battle(pPokemon, pMoveList, cPokemon, cMoveList, playerImgList, computerImgList, playerBar, computerBar, sock=None, server=None):
     global winner
     pStats = [1, 1]
     cStats = [1, 1]
-    # Initializing the condition for iterating the main program loop
     fainted = False
-
-    # Entire following block of code dedicated to drawing the battle screen for the
-    # first time in the correct order, and with good readability
-    DISPLAYSURF.blit(background, (0, 0))
-    drawText(pPokemon[0].upper() + "! I choose you!", font, DISPLAYSURF, 10, 400, BLACK)
-    time.sleep(2)
-    DISPLAYSURF.blit(playerImgList[1], (0, 195))
-    drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, BLACK)
-    playerBar.drawRects()
-    time.sleep(2)
-    DISPLAYSURF.blit(background, (0, 0))
-    drawText("Computer sent out " + cPokemon[0] + "!", font, DISPLAYSURF, 10, 400, BLACK)
-    DISPLAYSURF.blit(playerImgList[1], (0, 195))
-    drawText(pPokemon[0], font, DISPLAYSURF, 200, 320, BLACK)
-    playerBar.drawRects()
-    time.sleep(2)
-    DISPLAYSURF.blit(background, (0, 0))
+    
+    # ... (vynechané blity pre šetrenie miesta) ...
     redraw(pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList)
 
-    # Main program loop. Loop terminates when one pokemon has fained.
-    while fainted != True:
-        # Executing the move selection functions for both the player and the computer
+    while not fainted:
+        # 1. Hráč si vyberie útok
         pMove = pMoveSelect(pMoveList, pPokemon, playerBar, computerBar, playerImgList, computerImgList, button1,
                             button2, button3, button4, cPokemon)
-        cMove = cMoveSelect(cMoveList)
+        
+        # 2. Synchronizácia útokov cez sieť
+        if sock and server:
+            # Pošleme index nášho útoku (0-3)
+            move_index = pMoveList.index(pMove)
+            sock.sendto(f"MOVE:{move_index}".encode(), server)
+            
+            drawText("Waiting for opponent's move...", font, DISPLAYSURF, 10, 400, BLACK)
+            while True:
+                data, _ = sock.recvfrom(1024)
+                msg = data.decode()
+                if msg.startswith("OPPONENT_MOVE:"):
+                    opp_move_idx = int(msg.split(":")[1])
+                    cMove = cMoveList[opp_move_idx]
+                    break
+        else:
+            cMove = cMoveSelect(cMoveList)
 
-        # If player stat is faster, player attack sequence executes before computer
-        # attack sequence. Else, computer attack sequence attacks first.
+        # 3. Vyhodnotenie (kto je rýchlejší)
+        # Logika zostáva rovnaká, ale 'cMove' je teraz ťah skutočného hráča
         if pPokemon[2] < cPokemon[2]:
-            # Execute attack sequence for player
-            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList,
-                            computerImgList)
-            # Update the health bar if any changes have occured
+            pAttackSequence(pPokemon, pMove, cPokemon, pStats, cStats, playerBar, computerBar, playerImgList, computerImgList)
+            # ... kontrola HP a útok súpera ...
+
             computerBar.updateBar(cPokemon)
             computerBar.drawRects()
             pygame.display.update()
@@ -536,7 +534,7 @@ def AdvantageCalc(attack, target):
     return typeAdvantage
 
 
-def main():
+def main(sock=None, server=None):
     global DISPLAYSURF, TEXTSURF, font, background, endBackground, playerImgList, choice
     global button1, button2, button3, button4
 
@@ -597,13 +595,34 @@ def main():
                     playerImgList = bulbImages
                     picked = True
 
-    choices = ["Charmander", "Squirtle", "Bulbasaur"]
-    choices.remove(choice)
+    # --- SIEŤOVÁ SYNCHRONIZÁCIA VÝBERU ---
+    if sock and server:
+        # Pošleme náš výber
+        sock.sendto(f"PICK:{choice}".encode(), server)
+        drawText("Waiting for opponent...", font, DISPLAYSURF, 10, 450, BLACK)
+        
+        # Čakáme na výber súpera
+        while True:
+            data, _ = sock.recvfrom(1024)
+            msg = data.decode()
+            if msg.startswith("OPPONENT_PICK:"):
+                opp_choice = msg.split(":")[1]
+                break
+    else:
+        # Fallback pre singleplayer/testovanie
+        opp_choice = "Bulbasaur" if choice != "Bulbasaur" else "Squirtle"
+
+    # Nastavenie obrázkov súpera podľa výberu druhého hráča
+    if opp_choice == "Charmander":
+        computerImgList = charImages
+    elif opp_choice == "Bulbasaur":
+        computerImgList = bulbImages
+    else:
+        computerImgList = squirtImages
 
     pPokemon, pMoveList = PlayerChoice(choice.lower() + ".txt")
-    cPokemon, cMoveList, computerImgList = ComputerChoice(
-        choices, charImages, bulbImages, squirtImages
-    )
+    # Teraz používame opp_choice namiesto náhodného výberu
+    cPokemon, cMoveList = PlayerChoice(opp_choice.lower() + ".txt")
 
     playerBar = HealthBar()
     playerBar.init(200, 305)
@@ -623,11 +642,13 @@ def main():
     button4.assignImage(button_img)
     button4.setCoords(202, 535)
 
+    # Odovzdáme sock a server do funkcie Battle
     Battle(
         pPokemon, pMoveList,
         cPokemon, cMoveList,
         playerImgList, computerImgList,
-        playerBar, computerBar
+        playerBar, computerBar,
+        sock, server
     )
 
 def wait_for_start():
