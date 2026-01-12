@@ -20,6 +20,14 @@ FPS = 15
 fpsClock = pygame.time.Clock()
 
 
+def safe_get_active(team, index):
+    if index is None:
+        return None, None
+    if index < 0 or index >= len(team):
+        return None, None
+    return team[index]["pokemon"], team[index]["moves"]
+
+
 def MoveStrip(pokemonList, moveNumber):
     # Build move filename
     moveName = pokemonList[moveNumber + 3].lower() + '.txt'
@@ -502,14 +510,16 @@ def cAttackSequence(cPokemon, cMove, pPokemon, cStats, pStats, playerBar, comput
 
 
 def DamageMod(attacker, move, target, atk_stats, def_stats):
+    if move[2] == "*" or move[0] != "1":
+        return target
     dmg = int(move[2])
     multiplier = AdvantageCalc(move, target)
     atk = StatIndex(atk_stats, "A")
     defense = StatIndex(def_stats, "D")
     damage = int(dmg * (atk / defense) * multiplier)
-
     target[1] -= damage
     return target
+
 
 
 def StatMod(move, targetStats, defenderName, pPokemon, playerBar, computerImgList, cPokemon, computerBar, playerImgList):
@@ -544,10 +554,12 @@ def StatIndex(stats, stat):
 def AdvantageCalc(attack, target):
     combo = attack[1] + target[3]
     chart = {
-        "FG": 2, "FW": .5, "GF": .5, "GW": 2,
-        "WF": 2, "WG": .5
+        "FG": 2, "FW": 0.5,
+        "GF": 0.5, "GW": 2,
+        "WF": 2, "WG": 0.5
     }
     return chart.get(combo, 1)
+
 
 
 def main(team_names):
@@ -561,6 +573,9 @@ def main(team_names):
 
     font = pygame.font.SysFont(None, 22)
 
+    background = pygame.image.load("assets/background.png").convert()
+    endBackground = pygame.image.load("assets/background.png").convert()
+
     player_team = LoadPlayerTeam(team_names)
     computer_team = LoadPlayerTeam(["Charmander"])
 
@@ -570,20 +585,35 @@ def main(team_names):
     pStats = [1, 1]
     cStats = [1, 1]
 
+    openball = pygame.transform.scale(
+        pygame.image.load('assets/open.png'), (20, 20)
+    )
+    closedball = pygame.transform.scale(
+        pygame.image.load('assets/closed.png'), (20, 20)
+    )
+
+    animateText("Choose your Pokemon...", font, TEXTSURF, 120, 100, WHITE)
+    pygame.display.update()
     while True:
 
-        openball = pygame.transform.scale(
-            pygame.image.load('assets/open.png'), (20, 20)
-        )
-        closedball = pygame.transform.scale(
-            pygame.image.load('assets/closed.png'), (20, 20)
-        )
+        pPokemon, pMoves = safe_get_active(player_team, player_idx)
+        cPokemon, cMoves = safe_get_active(computer_team, comp_idx)
 
-        animateText("Choose your Pokemon...", font, TEXTSURF, 120, 100, WHITE)
-        pygame.display.update()
+        if pPokemon is None:
+            import Menu
+            drawText("YOU LOSE!", font, DISPLAYSURF, 150, 300)
+            pygame.display.update()
+            time.sleep(2)
+            Menu.main_menu()
+            return
 
-        pPokemon, pMoves = get_active_pokemon(player_team, player_idx)
-        cPokemon, cMoves = get_active_pokemon(computer_team, comp_idx)
+        if cPokemon is None:
+            import Menu
+            drawText("YOU WIN!", font, DISPLAYSURF, 150, 300)
+            pygame.display.update()
+            time.sleep(2)
+            Menu.main_menu()
+            return
 
         DISPLAYSURF.blit(background, (0, 0))
         drawText(f"{pPokemon[0]} HP: {pPokemon[1]}", font, DISPLAYSURF, 40, 400)
